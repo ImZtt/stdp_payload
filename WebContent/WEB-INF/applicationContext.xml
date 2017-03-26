@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-3.0.xsd
+		http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.0.xsd
+		http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	<!-- Configures the @Controller programming model -->
+	<!-- <import resource="file-query-context.xml"/> -->
+	<!-- <context:property-placeholder location="/WEB-INF/jdbc.properties"/>
+	<bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"       
+        destroy-method="close"  >       
+	    <property name="driverClassName" value="${jdbc.driverClass}" />      
+	    <property name="url" value="${jdbc.jdbcUrl}" />      
+	    <property name="username" value="${jdbc.user}" />      
+	    <property name="password" value="${jdbc.password}" />
+	     <property name="maxActive"> 
+                 <value>255</value> 
+         </property> 
+         <property name="maxIdle"> 
+                <value>2</value> 
+         </property> 
+         <property name="maxWait"> 
+                <value>60000</value> 
+         </property>
+         <property name="removeAbandoned"> 
+                <value>true</value> 
+         </property>
+         <property name="removeAbandonedTimeout"> 
+                <value>60000</value> 
+         </property>
+          
+	</bean>
+	
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+        <property name="dataSource" ref="dataSource"/>
+    </bean> -->
+	<!-- <mvc:annotation-driven />
+	<mvc:view-controller path="/" view-name="index"/>
+	<task:annotation-driven />
+	<context:property-placeholder properties-ref="jdbccfg" location="/WEB-INF/systemParameter-config.properties" /> 
+	<context:component-scan base-package="com.dinglicom.fileindexor.sigraw" />
+	<context:annotation-config />  -->
+	<!-- 配置定时任务-->
+	<bean id="quartzJob" class="com.dinglicom.stdppayload.task.FileReadTask"></bean>
+	<bean id="jobtask" class="org.springframework.scheduling.quartz.MethodInvokingJobDetailFactoryBean">
+	     <property name="targetObject">
+	     	<ref bean="quartzJob" />
+	     </property>
+	     <property name="targetMethod">
+	      <value>getXDRIDFromFile</value>
+	     </property>
+	     <property name="concurrent">
+	     	<value>false</value>
+	     </property>
+	</bean>
+     <bean id="doTime" class="org.springframework.scheduling.quartz.CronTriggerFactoryBean">
+          <property name="jobDetail">
+           <ref bean="jobtask" />
+          </property>
+          <property name="cronExpression">
+           <value>0 55 * * * ?</value>
+          </property>
+     </bean>
+     <bean id="startQuertz" lazy-init="false" autowire="no"
+      class="org.springframework.scheduling.quartz.SchedulerFactoryBean">
+          <property name="triggers">
+           <list>
+			<ref bean="doTime" />
+           </list>
+          </property>
+     </bean>
+	
+	
+</beans>
